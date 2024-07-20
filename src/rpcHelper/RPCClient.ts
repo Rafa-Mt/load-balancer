@@ -1,6 +1,5 @@
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
-import { HealthService } from "../types/health";
 import { GenericService, ServiceClient } from "./customTypes";
 import { ExtractRequestType, ExtractResponseType } from "./customTypes";
 

@@ -15,7 +15,7 @@ if (port < MINPORT || port > MAXPORT) {
   console.error(`Port must be between ${MINPORT} and ${MAXPORT}`);
   process.exit(1);
 }
-const PROTOPATH = "../protos/health.proto";
+const PROTOPATH = "./src/proto/health.proto";
 const server = new RPCServer();
 const protoDescriptor = server.loadProtoFile(PROTOPATH, {
   keepCase: true,
@@ -26,7 +26,7 @@ const protoDescriptor = server.loadProtoFile(PROTOPATH, {
 });
 
 server.addService<HealthService>(protoDescriptor, "health", "HealthService", {
-  Check: (call, callback) => {
+  Check: (call: any, callback: any) => {
     osu.cpu.usage().then((cpuUsage) => {
       callback(null, {
         freeMemory: freemem(),
