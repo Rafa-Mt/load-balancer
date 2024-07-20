@@ -1,0 +1,51 @@
+syntax = "proto3";
+package crud;
+// The welcome service definition.
+service CrudService {
+  // Sends a welcome
+  rpc Create (CreateRequest) returns (CreateReply) {}
+  rpc Read ( ReadRequest) returns (ReadReply) {}
+  rpc Update ( UpdateRequest) returns (UpdateReply) {}
+  rpc Delete ( DeleteRequest) returns (DeleteReply) {}
+}
+// The request message containing the user's name.
+message CreateRequest {
+  string table = 1; 
+  map<string, string> atributos = 2;
+}
+
+message ReadRequest {
+  string table = 1; 
+  map<string, string> criteria = 2;
+}
+
+message UpdateRequest {
+  string table = 1; 
+  string column = 2;
+  string value = 3;
+  map<string, string> criteria = 4;
+}
+// UPDATE table_name SET column1 = value1, column2 = value2 WHERE some_column = some_value;
+
+message DeleteRequest {
+  string table = 1; 
+  map<string, string> atributos = 2;
+}
+
+
+message CreateReply {
+    string result = 1;
+}
+  
+message ReadReply {
+    string result = 1;
+}
+  
+message UpdateReply {
+    string result = 1;
+}
+  
+message DeleteReply {
+    string result = 1;
+}
+

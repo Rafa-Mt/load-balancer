@@ -1,0 +1,10 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+package health;
+service HealthService {
+  rpc Check(google.protobuf.Empty) returns (CheckResponse);
+}
+message CheckResponse {
+  int32 freeMemory = 1;
+  float cpuUsage = 2;
+}
