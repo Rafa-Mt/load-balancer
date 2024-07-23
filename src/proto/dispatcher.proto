@@ -1,0 +1,22 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+package dispatcher;
+
+service DispatcherService {
+	rpc Index(google.protobuf.Empty) returns (Response);
+	rpc Check(google.protobuf.Empty) returns (Response);
+	rpc Halt(HaltRequest) returns (google.protobuf.Empty);
+}
+
+message HaltRequest {
+	int32 seconds = 1;
+	int32 returnValue = 2;
+}
+message Response {
+	int32 response = 1;
+}
+
+message CheckResponse {
+	int32 effectivity = 1;
+	int32 activeRequests = 2;
+}

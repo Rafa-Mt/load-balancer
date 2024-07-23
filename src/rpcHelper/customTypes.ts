@@ -18,7 +18,6 @@ export type ServiceImplementation<T extends GenericService> = {
     : never;
 };
 
-
 //client
 export type ExtractRequestType<T, K extends keyof T> = T[K] extends (
   request: infer R
@@ -42,6 +41,3 @@ export type ServiceClient<T extends GenericService> = {
   ) => void;
   [key: string]: any;
 };
-
-
-

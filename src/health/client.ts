@@ -13,9 +13,9 @@ const config = {
 };
 
 const addresses = [
-  "127.0.0.1:5002",
+ "127.0.0.1:5011", "127.0.0.1:5012",
 ]
-const PROTO_PATH = "../protos/health.proto";
+const PROTO_PATH = "./src/proto/health.proto";
 
 
 const client = new RPCClient<HealthService>(PROTO_PATH, "health", config);
