@@ -45,14 +45,14 @@ const halt = async (seconds: number, returnValue: number, callback: any) => {
 
 server.addService<DispatcherService>(protoDescriptor, "dispatcher", "DispatcherService", {
 	Index: (call: any, callback: any) => {
+		console.log("index")
 		callback
 		(null, {response: port})
 	},
 	Check: (call: any, callback: any) => {
-		console.log("check called")
-		callback({
+		callback(null, {
 			effectivity: effectivity.totalAmount / effectivity.failed, 
-			activeRequests: pendingRequests, 
+			activeRequests: effectivity.totalAmount - pendingRequests, 
 		})
 	},
 	Halt: async (call: any, callback: any) => {

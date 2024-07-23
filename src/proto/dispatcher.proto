@@ -4,7 +4,8 @@ package dispatcher;
 
 service DispatcherService {
 	rpc Index(google.protobuf.Empty) returns (Response);
-	rpc Check(google.protobuf.Empty) returns (Response);
+	rpc Check(google.protobuf.Empty) returns (CheckResponse);
+	rpc Status(google.protobuf.Empty) returns (CheckResponse);
 	rpc Halt(HaltRequest) returns (google.protobuf.Empty);
 }
 
@@ -17,6 +18,6 @@ message Response {
 }
 
 message CheckResponse {
-	int32 effectivity = 1;
-	int32 activeRequests = 2;
+	float effectivity = 1;
+	float activeRequests = 2;
 }
