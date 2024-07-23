@@ -1,7 +1,7 @@
 import express from "express";
 import { createHealthClient, getHealth, Health } from "./healthClient";
 import { createDispatcherClient, getStatus } from "./dispatcherClient";
-import { calcStatus } from "./status";
+import { calcStatus, getWinner } from "./status";
 
 const app = express();
 const port = 3001;
@@ -61,7 +61,8 @@ app.get("/", (req: express.Request, res: express.Response) => {
 app.get('/status', async (req: express.Request, res: express.Response) => {
 	res.setHeader('Content-Type', 'application/json');
 	const finalTable = await calcStatus(dirs, clients)
-	res.send(JSON.stringify(finalTable))
+	const winner = getWinner(finalTable)
+	res.send(JSON.stringify(winner))
 })
 
 app.post('/halt', async (req: express.Request, res: express.Response) => {
