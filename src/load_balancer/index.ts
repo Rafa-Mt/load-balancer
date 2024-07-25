@@ -37,7 +37,7 @@ const clients: BalancerClient[] = [];
 
 const statusRoute = async (logKey: string = '') => {
   const finalTable = await calcStatus(dirs, clients, logKey);
-  const winner = getWinner(finalTable);
+  const winner = getWinner(finalTable, [.5, .5, 0, 0]);
   return winner;
 };
 
@@ -106,7 +106,8 @@ app.post("/halt", async (req: express.Request, res: express.Response) => {
     { seconds, returnValue },
     (err: any, response: any) => {
       console.log(response);
-			res.send(JSON.stringify({ status: "Enqueued", response, seconds }));
+      const result = {result: response.response === -1 ? "Failed" : "Success"};
+			res.send(JSON.stringify({ status: "Enqueued", response, seconds, result, winnerDispatcherAddr }));
     }
   );
 });

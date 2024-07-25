@@ -28,16 +28,26 @@ const protoDescriptor = server.loadProtoFile(PROTOPATH, {
 
 let pendingRequests = 0;
 const effectivity = {
-	totalAmount: 1,
-	success: 1,
-	failed: 1,
+	totalAmount: 0,
+	success: 0,
+	failed: 0,
 }
+const failRate = Math.floor(Math.random() * 100)
 
 const halt = async (seconds: number, returnValue: number, callback: any) => {
+	const failChance = Math.floor(Math.random() * 100);
 	return new Promise((rs, rj) => {
+		console.log(effectivity, (effectivity.totalAmount - effectivity.failed) / effectivity.totalAmount)
 		return setTimeout(() => {
+			effectivity.totalAmount++;
 			pendingRequests--;
 			console.log('Halt called', {seconds, returnValue})
+			if (failChance > failRate) {
+				callback(null, {response: -1})	
+				effectivity.failed++;
+				return rs("OK")
+			}
+			effectivity.success++;
 			callback(null, {response: returnValue});
 			rs("OK")
 		}, seconds*1000)
@@ -51,9 +61,10 @@ server.addService<DispatcherService>(protoDescriptor, "dispatcher", "DispatcherS
 		(null, {response: port})
 	},
 	Check: (call: any, callback: any) => {
-		console.log(effectivity)
-		const difference = (effectivity.totalAmount - effectivity.failed);
-		const calculatedEffectivity = (difference == 0 || effectivity.totalAmount == 0) ? 1 : difference;
+		// console.log(effectivity)
+		const difference = (effectivity.totalAmount - effectivity.failed) / effectivity.totalAmount;
+		const calculatedEffectivity = isNaN(difference) || effectivity.totalAmount === 0 ? 1 : difference;
+		// console.log("calcef", calculatedEffectivity)
 		callback(null, {
 			effectivity: calculatedEffectivity, 
 			activeRequests: pendingRequests, 
@@ -63,9 +74,7 @@ server.addService<DispatcherService>(protoDescriptor, "dispatcher", "DispatcherS
 		const { seconds, returnValue } = call.request;
 		try {
 			pendingRequests++;
-			effectivity.totalAmount++;
 			queue( async () => await halt(seconds, returnValue, callback))
-			effectivity.success++;
 		}
 		catch(e) {
 			console.log('Halt failed', e)

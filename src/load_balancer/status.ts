@@ -140,10 +140,12 @@ export const getWinner = (finalTable: [Contender, Contender, Contender, Contende
 
   // return the addr with the highest value
   const max = Math.max(...summedTable.map((item) => item.value));
-  return summedTable.find((item) => item.value === max)?.addr ?? summedTable[0].addr;
+  const winners = summedTable.filter((item) => item.value === max);
+
+  if (winners.length === 1) return winners[0].addr;
  
-
-
+  const randomWinnner = Math.floor(Math.random() * winners.length);
+  return winners[randomWinnner].addr;
 
 };
 
