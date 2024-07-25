@@ -37,7 +37,6 @@ const halt = async (seconds: number, returnValue: number, callback: any) => {
 	return new Promise((rs, rj) => {
 		return setTimeout(() => {
 			pendingRequests--;
-			effectivity.totalAmount--;
 			console.log('Halt called', {seconds, returnValue})
 			callback(null, {response: returnValue});
 			rs("OK")
@@ -57,7 +56,7 @@ server.addService<DispatcherService>(protoDescriptor, "dispatcher", "DispatcherS
 		const calculatedEffectivity = (difference == 0 || effectivity.totalAmount == 0) ? 1 : difference;
 		callback(null, {
 			effectivity: calculatedEffectivity, 
-			activeRequests: effectivity.totalAmount - pendingRequests, 
+			activeRequests: pendingRequests, 
 		})
 	},
 	Halt: async (call: any, callback: any) => {

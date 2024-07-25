@@ -61,6 +61,8 @@ export const calcStatus = async (dirs: Dir[], clients: BalancerClient[], logKey:
         addr: dispatcher.addr,
       };
 
+      // console.log(arrayRes);
+
       Object.assign(results, { [dispatcher.addr]: res });
       arrayResults.push(arrayRes);
     }
@@ -83,6 +85,7 @@ export const calcStatus = async (dirs: Dir[], clients: BalancerClient[], logKey:
   const activeRequests: Contender[] = curveValues(arrayResults.map((entry) => {
     return { addr: entry.addr, value: entry.activeRequests };
   }));
+  // console.log('Active Requests: ', activeRequests)
   const minActive = Math.min(
     ...activeRequests.map((item) => item.value)
   );
@@ -116,7 +119,7 @@ export const calcStatus = async (dirs: Dir[], clients: BalancerClient[], logKey:
 };
 
 export const getWinner = (finalTable: [Contender, Contender, Contender, Contender], weights: [number, number, number, number] = [.25, .25, .25, .25]) => {
-
+  // console.log(finalTable)
   const newTable = finalTable.map((item, index) => {
     return {
       addr: item.addr,
@@ -151,9 +154,10 @@ const curveValues = (contenders: Contender[]) => {
   const max = Math.max(...contenders.map((item) => item.value));
   
  return contenders.map((item) => {
+  const result = item.value / max 
     return {
       addr: item.addr,
-      value: item.value / max,
+      value: isNaN(result) ? 0 : result,
     };
   });
 }
@@ -181,9 +185,9 @@ const main = () => {
   ]
 
   const curvedCont = curveValues(contenders) as [Contender, Contender, Contender, Contender];
-  console.log(
-    getWinner(curvedCont)
-  )
+  // console.log(
+  //   getWinner(curvedCont)
+  // )
 }
 
 if (require.main === module) {
