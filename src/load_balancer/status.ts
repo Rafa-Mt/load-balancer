@@ -49,13 +49,13 @@ export const calcStatus = async (dirs: Dir[], clients: BalancerClient[]) => {
       health.client.service,
       health.addr
     );
-    console.log(gottenHealth, "health");
+    // console.log(gottenHealth, "health");
     const gottenStatus: any = await getStatus(
       dispatcher.client.client,
       dispatcher.client.service,
       dispatcher.addr
     );
-    console.log(gottenStatus, "status");
+    // console.log(gottenStatus, "status");
     if (!(gottenHealth instanceof Error) && !(gottenStatus instanceof Error)) {
       const res = {
         effectivity: gottenStatus[dispatcher.addr].effectivity,
@@ -77,7 +77,7 @@ export const calcStatus = async (dirs: Dir[], clients: BalancerClient[]) => {
   }
 
   const table = Object.entries(results);
-  console.log("table:", table);
+  // console.log("table:", table);
 
   const effectivity = arrayResults.map((entry) => {
     return { addr: entry.addr, effectivity: entry.effectivity };
@@ -131,8 +131,8 @@ export const getWinner = (finalTable: FinalTable) => {
   return winner;
 };
 
-function mode<T extends string | number>(array: T[]): T | null {
-  if (array.length === 0) return null;
+function mode<T extends string | number>(array: T[]): number {
+  if (array.length === 0) return -1;
   const modeMap: Record<T, number> = {} as Record<T, number>;
   let maxEl = array[0],
     maxCount = 1;
@@ -145,5 +145,5 @@ function mode<T extends string | number>(array: T[]): T | null {
       maxCount = modeMap[el];
     }
   }
-  return maxEl;
+  return array.indexOf(maxEl);
 }

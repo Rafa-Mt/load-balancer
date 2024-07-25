@@ -6,7 +6,7 @@ service DispatcherService {
 	rpc Index(google.protobuf.Empty) returns (Response);
 	rpc Check(google.protobuf.Empty) returns (CheckResponse);
 	rpc Status(google.protobuf.Empty) returns (CheckResponse);
-	rpc Halt(HaltRequest) returns (google.protobuf.Empty);
+	rpc Halt(HaltRequest) returns (Response);
 }
 
 message HaltRequest {

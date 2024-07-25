@@ -28,8 +28,8 @@ const protoDescriptor = server.loadProtoFile(PROTOPATH, {
 
 let pendingRequests = 0;
 const effectivity = {
-	totalAmount: 0,
-	success: 0,
+	totalAmount: 1,
+	success: 1,
 	failed: 1,
 }
 
@@ -39,7 +39,7 @@ const halt = async (seconds: number, returnValue: number, callback: any) => {
 			pendingRequests--;
 			console.log('Halt called', {seconds, returnValue})
 			callback(null, {response: returnValue});
-		}, seconds)
+		}, seconds*1000)
 	})
 }
 
@@ -50,8 +50,11 @@ server.addService<DispatcherService>(protoDescriptor, "dispatcher", "DispatcherS
 		(null, {response: port})
 	},
 	Check: (call: any, callback: any) => {
+		console.log(effectivity)
+		const difference = (effectivity.totalAmount - effectivity.failed);
+		const calculatedEffectivity = (difference == 0 || effectivity.totalAmount == 0) ? 1 : difference;
 		callback(null, {
-			effectivity: effectivity.totalAmount / effectivity.failed, 
+			effectivity: calculatedEffectivity, 
 			activeRequests: effectivity.totalAmount - pendingRequests, 
 		})
 	},
