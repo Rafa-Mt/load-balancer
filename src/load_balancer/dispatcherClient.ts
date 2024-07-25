@@ -26,7 +26,6 @@ export const createDispatcherClient = (address: string): Dispatcher => {
 export const getStatus = async (client: RPCClient<DispatcherService>, service: any, dir: string) => {
     return new Promise((rs, rj) => {
         client.call(service, "Check", {}, (err: any, response: any) => {
-            console.log('getStatus')
             if (err) {
                 rj(err)
             } else {

@@ -1,6 +1,7 @@
 import { getStatus } from "./dispatcherClient";
 import { getHealth } from "./healthClient";
 import type { Dir, BalancerClient } from ".";
+import { Logger } from "../logger/logger";
 
 interface ResultValue {
   effectivity: number;
@@ -10,7 +11,7 @@ interface ResultValue {
 }
 type Result = Record<string, ResultValue>;
 
-interface ArrayResult {
+export interface ArrayResult {
   effectivity: number;
   activeRequests: number;
   freeMemory: number;
@@ -18,26 +19,15 @@ interface ArrayResult {
   addr: string;
 }
 
-type FinalTable = [
-  {
-    freeMemory: number;
-    addr: string;
-  },
-  {
-    activeRequest: number;
-    addr: string;
-  },
-  {
-    effectivity: number;
-    addr: string;
-  },
-  {
-    cpuUsage: number;
-    addr: string;
-  }
-];
 
-export const calcStatus = async (dirs: Dir[], clients: BalancerClient[]) => {
+interface Contender {
+  addr: string;
+  value: number;
+}
+
+
+
+export const calcStatus = async (dirs: Dir[], clients: BalancerClient[], logKey: string = '') => {
   const results: Result = {};
   const arrayResults: ArrayResult[] = [];
 
@@ -76,43 +66,44 @@ export const calcStatus = async (dirs: Dir[], clients: BalancerClient[]) => {
     }
   }
 
-  const table = Object.entries(results);
-  // console.log("table:", table);
+  logKey && Logger.addToEntry(logKey, 'status', arrayResults);
 
-  const effectivity = arrayResults.map((entry) => {
-    return { addr: entry.addr, effectivity: entry.effectivity };
-  });
+  const table = Object.entries(results);
+
+  const effectivity: Contender[] = curveValues(arrayResults.map((entry) => {
+    return { addr: entry.addr, value: entry.effectivity };
+  }));
   const maxEffectivity = Math.max(
-    ...effectivity.map((item) => item.effectivity)
+    ...effectivity.map((item) => item.value)
   );
   const effectivityWinner = effectivity.find(
-    (item) => item.effectivity === maxEffectivity
+    (item) => item.value === maxEffectivity
   );
 
-  const activeRequests = arrayResults.map((entry) => {
-    return { addr: entry.addr, activeRequests: entry.activeRequests };
-  });
+  const activeRequests: Contender[] = curveValues(arrayResults.map((entry) => {
+    return { addr: entry.addr, value: entry.activeRequests };
+  }));
   const minActive = Math.min(
-    ...activeRequests.map((item) => item.activeRequests)
+    ...activeRequests.map((item) => item.value)
   );
   const requestWinner = activeRequests.filter(
-    (item) => item.activeRequests === minActive
+    (item) => item.value === minActive
   )[0];
 
-  const freeMemory = arrayResults.map((entry) => {
+  const freeMemory: Contender[] = curveValues(arrayResults.map((entry) => {
     return {
       addr: entry.addr,
-      freeMemory: entry.freeMemory < 0 ? -entry.freeMemory : entry.freeMemory,
+      value: entry.freeMemory < 0 ? -entry.freeMemory : entry.freeMemory,
     };
-  });
-  const maxMemory = Math.max(...freeMemory.map((item) => item.freeMemory));
-  const memoryWinner = freeMemory.find((item) => item.freeMemory === maxMemory);
+  }));
+  const maxMemory = Math.max(...freeMemory.map((item) => item.value));
+  const memoryWinner = freeMemory.find((item) => item.value === maxMemory);
 
-  const cpuUsage = arrayResults.map((entry) => {
-    return { addr: entry.addr, cpuUsage: entry.cpuUsage };
-  });
-  const minCpu = Math.min(...cpuUsage.map((item) => item.cpuUsage));
-  const cpuWinner = cpuUsage.find((item) => item.cpuUsage === minCpu);
+  const cpuUsage: Contender[] = curveValues(arrayResults.map((entry) => {
+    return { addr: entry.addr, value: entry.cpuUsage };
+  }));
+  const minCpu = Math.min(...cpuUsage.map((item) => item.value));
+  const cpuWinner = cpuUsage.find((item) => item.value === minCpu);
 
   const finalTable = [
     effectivityWinner,
@@ -121,29 +112,86 @@ export const calcStatus = async (dirs: Dir[], clients: BalancerClient[]) => {
     cpuWinner,
   ];
 
-  return finalTable as FinalTable;
+  return finalTable as [Contender, Contender, Contender, Contender];
 };
 
-export const getWinner = (finalTable: FinalTable) => {
-  // get most common address
-  const addresses = finalTable.map((entry) => entry.addr);
-  const winner = mode(addresses);
-  return winner;
+export const getWinner = (finalTable: [Contender, Contender, Contender, Contender], weights: [number, number, number, number] = [.25, .25, .25, .25]) => {
+
+  const newTable = finalTable.map((item, index) => {
+    return {
+      addr: item.addr,
+      value: item.value * weights[index],
+    };
+  });
+
+  // if an addr appears more than once, sum the values
+  const addrSet = new Set(newTable.map((item) => item.addr));
+  const addrArray = Array.from(addrSet);
+  const summedTable = addrArray.map((addr) => {
+    return {
+      addr: addr,
+      value: newTable.filter((item) => item.addr === addr).reduce((acc, curr) => acc + curr.value, 0),
+    };
+  });
+
+
+  // return the addr with the highest value
+  const max = Math.max(...summedTable.map((item) => item.value));
+  return summedTable.find((item) => item.value === max)?.addr ?? summedTable[0].addr;
+ 
+
+
+
 };
 
-function mode<T extends string | number>(array: T[]): number {
-  if (array.length === 0) return -1;
-  const modeMap: Record<T, number> = {} as Record<T, number>;
-  let maxEl = array[0],
-    maxCount = 1;
-  for (let i = 0; i < array.length; i++) {
-    const el = array[i];
-    if (modeMap[el] == null) modeMap[el] = 1;
-    else modeMap[el]++;
-    if (modeMap[el] > maxCount) {
-      maxEl = el;
-      maxCount = modeMap[el];
-    }
-  }
-  return array.indexOf(maxEl);
+
+
+const curveValues = (contenders: Contender[]) => {
+  // all values between 0 and 1
+  const max = Math.max(...contenders.map((item) => item.value));
+  
+ return contenders.map((item) => {
+    return {
+      addr: item.addr,
+      value: item.value / max,
+    };
+  });
 }
+
+
+
+const main = () => {
+  const contenders = [
+    {
+      addr: "1",
+      value: 10,
+    },
+    {
+      addr: "2",
+      value: 20,
+    },
+    {
+      addr: "3",
+      value: 10,
+    },
+    {
+      addr: "4",
+      value: 10,
+    },
+  ]
+
+  const curvedCont = curveValues(contenders) as [Contender, Contender, Contender, Contender];
+  console.log(
+    getWinner(curvedCont)
+  )
+}
+
+if (require.main === module) {
+  main();
+}
+
+
+
+
+
+

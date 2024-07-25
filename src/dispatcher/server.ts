@@ -37,8 +37,10 @@ const halt = async (seconds: number, returnValue: number, callback: any) => {
 	return new Promise((rs, rj) => {
 		return setTimeout(() => {
 			pendingRequests--;
+			effectivity.totalAmount--;
 			console.log('Halt called', {seconds, returnValue})
 			callback(null, {response: returnValue});
+			rs("OK")
 		}, seconds*1000)
 	})
 }
@@ -67,7 +69,9 @@ server.addService<DispatcherService>(protoDescriptor, "dispatcher", "DispatcherS
 			effectivity.success++;
 		}
 		catch(e) {
+			console.log('Halt failed', e)
 			callback(null, {response: -2048})
+			effectivity.failed++;
 		}
 	},
 });
